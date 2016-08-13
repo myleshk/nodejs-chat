@@ -1,6 +1,9 @@
 function getName() {
-    var name = "myname";
-
+    console.log($('#users'));
+    var name = prompt("Please enter your name", "Harry Potter");
+    if (!name) {
+        return getName();
+    }
     var tokens = name.split(',');
 
     if (tokens.length > 1) {
@@ -14,15 +17,15 @@ function escaped(s) {
     return $('<div></div>').html(s).html();
 }
 
-function searchUrlFor(name) {
-    return 'https://www.google.com/search?q=' + encodeURIComponent(name) + '%20site:wikipedia.org&btnI=3564';
+function init() {
+    var name = getName();
+
+    $('#data').attr('placeholder', 'send message as ' + name);
 }
 
-var name = getName();
-
-$('#data').attr('placeholder', 'send message as ' + name);
-
 var socket = io.connect('/');
+
+window.initiated = false;
 
 // on connection to server, ask for user's name with an anonymous callback
 socket.on('connect', function () {
@@ -32,25 +35,23 @@ socket.on('connect', function () {
 
 // listener, whenever the server emits 'updatechat', this updates the chat body
 socket.on('updatechat', function (username, data) {
-    $('#conversation').append('<b>' + escaped(username) + ':</b> ' + escaped(data) + '<br/>');
+    $('#conversation').append('<strong>' + escaped(username) + ':</strong> ' + escaped(data) + '<br/>');
 });
 
 // listener, whenever the server emits 'updateusers', this updates the username list
 socket.on('updateusers', function (data) {
     $('#users').empty();
     $.each(data, function (key, value) {
-        $('#users').append('<div><a href="' + searchUrlFor(key) + '" target="_blank">' + key + '</div>');
+        $('#users').append('<strong>' + key + '</strong>');
     });
 });
 
 socket.on('servernotification', function (data) {
-    var searchUrl = searchUrlFor(data.username);
-
     if (data.connected) {
         if (data.toSelf) data.username = 'you';
-        $('#conversation').append('connected: <a href="' + searchUrl + '" target="_blank">' + escaped(data.username) + '</a><br/>');
+        $('#conversation').append('connected: <strong>' + escaped(data.username) + '</strong><br/>');
     } else {
-        $('#conversation').append('disconnected: <a href="' + searchUrl + '" target="_blank">' + escaped(data.username) + '</a><br/>');
+        $('#conversation').append('disconnected: <strong>' + escaped(data.username) + '</strong><br/>');
     }
 });
 
