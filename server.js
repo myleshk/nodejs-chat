@@ -20,9 +20,17 @@ io.sockets.on('connection', (socket) => {
     });
 
     socket.on('adduser', (username) => {
-        socket.username = username;
+        var safe_name = username.toLowerCase();
 
-        usernames[username] = username;
+        if (usernames[safe_name]) {
+            socket.emit('invalidname');
+            return;
+        }
+
+        socket.username = username;
+        socket.safe_name = safe_name;
+
+        usernames[socket.safe_name] = username;
 
         socket.emit(
             'servernotification', {
@@ -37,7 +45,7 @@ io.sockets.on('connection', (socket) => {
     });
 
     socket.on('disconnect', () => {
-        delete usernames[socket.username];
+        delete usernames[socket.safe_name];
 
         io.sockets.emit('updateusers', usernames);
 
